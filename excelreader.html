@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Reader Software By Malik Brothers</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="./jquery.min.js"></script>
+    <script src="./xlsx.full.min.js"></script>
+</head>
+
+<body>
+    <h1 style="text-align: center; color: white;">Excel Reader Software By Malik Brothers</h1>
+    <div class="table-wrapper" style="margin-bottom: 0; box-shadow: none;">
+        <input type="text" id="search" placeholder="Search Data....." style="width: 70%;">
+        <input type="file" id="file">
+    </div>
+
+    <div class="table-wrapper" id="tableContainer" style="height: 400px !important; overflow: auto;">
+
+    </div>
+</body>
+
+<script>
+    $(document).on('input', '#search', function () {
+        var value = $(this).val().toLowerCase();
+        $("tbody tr").filter(function () {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
+    });
+
+    $('body').on('change', "#file", function () {
+        handleFile();
+    });
+
+    function handleFile() {
+        // Get the input element
+        var input = document.getElementById('file');
+
+        // Get the Excel file
+        var file = input.files[0];
+
+        // Check if a file is selected
+        if (file) {
+            // Read the Excel file
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var data = new Uint8Array(e.target.result);
+                var workbook = XLSX.read(data, { type: 'array' });
+                // Assume the first sheet is the one you want to convert
+                var sheetName = workbook.SheetNames[0];
+                var sheet = workbook.Sheets[sheetName];
+
+                // Convert sheet data to JSON
+                var json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+                console.log(json);
+                const thead = json[0];
+                const tbody = json.slice(1);
+
+                // Generate HTML table
+                var table = generateTable(thead, tbody);
+
+                // Get the container element where you want to append the table
+                var container = document.getElementById('tableContainer');
+
+                // Append the table to the container
+                container.innerHTML = ''; // Clear previous content
+                container.appendChild(table);
+
+            };
+
+            // Read the file as array buffer
+            reader.readAsArrayBuffer(file);
+        } else {
+            alert('Please select an Excel file.');
+        }
+    }
+
+
+    function generateTable(thead, tbody) {
+        // Create the table element
+        var table = document.createElement('table');
+        table.classList.add('fl-table');
+
+        // Create thead element
+        var theadElement = document.createElement('thead');
+
+        // Create a row for thead
+        var theadRow = document.createElement('tr');
+
+        // Add header cells to thead
+        for (var i = 0; i < thead.length; i++) {
+            var th = document.createElement('th');
+            th.textContent = thead[i];
+            theadRow.appendChild(th);
+        }
+
+        // Append thead row to thead element
+        theadElement.appendChild(theadRow);
+
+        // Append thead element to the table
+        table.appendChild(theadElement);
+
+        // Create tbody element
+        var tbodyElement = document.createElement('tbody');
+
+        // Add rows to tbody
+        for (var j = 0; j < tbody.length; j++) {
+            var tbodyRow = document.createElement('tr');
+
+            // Add cells to tbody row
+            for (var k = 0; k < tbody[j].length; k++) {
+                var td = document.createElement('td');
+                td.textContent = tbody[j][k];
+                tbodyRow.appendChild(td);
+            }
+
+            // Append tbody row to tbody element
+            tbodyElement.appendChild(tbodyRow);
+        }
+
+        // Append tbody element to the table
+        table.appendChild(tbodyElement);
+
+        return table;
+    }
+
+
+</script>
+
+</html>
